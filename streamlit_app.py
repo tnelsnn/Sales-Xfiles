@@ -11,6 +11,23 @@ cities_states_df = pd.read_csv('data/unique_locations.csv')
 sorted_cities = cities_states_df['city'].sort_values().unique()
 sorted_states = cities_states_df['state'].sort_values().unique()
 
+# State abbreviation to full name mapping
+state_full_names = {
+    'AB': 'Alberta', 'AK': 'Alaska', 'AR': 'Arkansas', 'OK': 'Oklahoma', 'AZ': 'Arizona',
+    'BC': 'British Columbia', 'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'NY': 'New York',
+    'DC': 'District of Columbia', 'MD': 'Maryland', 'DE': 'Delaware', 'PA': 'Pennsylvania', 'FL': 'Florida',
+    'HI': 'Hawaii', 'IA': 'Iowa', 'IL': 'Illinois', 'SD': 'South Dakota', 'LA': 'Louisiana',
+    'MA': 'Massachusetts', 'RI': 'Rhode Island', 'VT': 'Vermont', 'MB': 'Manitoba', 'ME': 'Maine',
+    'MI': 'Michigan', 'MO': 'Missouri', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MT': 'Montana',
+    'NC': 'North Carolina', 'ND': 'North Dakota', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NL': 'Newfoundland and Labrador', 'NM': 'New Mexico', 'NV': 'Nevada', 'OH': 'Ohio', 'ON': 'Ontario',
+    'OR': 'Oregon', 'WA': 'Washington', 'SC': 'South Carolina', 'SK': 'Saskatchewan', 'UT': 'Utah',
+    'WV': 'West Virginia', 'YT': 'Yukon Territory'
+}
+
+# Generate full state names for the dropdown
+sorted_state_full_names = [state_full_names[abbr] for abbr in sorted_states]
+
 # Function to filter data by city or state
 def filter_data(df, city=None, state=None):
     if city:
@@ -37,7 +54,9 @@ if filter_option == 'City':
     filtered_df = filter_data(df, city=city)
 else:
     # State selection dropdown
-    state = st.sidebar.selectbox('Select state', sorted_states)
+    selected_state_full_name = st.sidebar.selectbox('Select state', sorted_state_full_names)
+    # Find the corresponding state abbreviation
+    state = [abbr for abbr, full_name in state_full_names.items() if full_name == selected_state_full_name][0]
     filtered_df = filter_data(df, state=state)
 
 # Sort filtered results by dispensary name
