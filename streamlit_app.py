@@ -26,7 +26,7 @@ state_full_names = {
 }
 
 # Generate full state names for the dropdown
-sorted_state_full_names = [state_full_names[abbr] for abbr in sorted_states]
+sorted_state_full_names = [f"{abbr} - {state_full_names[abbr]}" for abbr in sorted_states]
 
 # Function to filter data by city or state
 def filter_data(df, city=None, state=None):
