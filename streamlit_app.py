@@ -56,8 +56,16 @@ else:
     # State selection dropdown
     selected_state_full_name = st.sidebar.selectbox('Select state', sorted_state_full_names)
     # Find the corresponding state abbreviation
-    state = [abbr for abbr, full_name in state_full_names.items() if full_name == selected_state_full_name][0]
-    filtered_df = filter_data(df, state=state)
+    state = None
+    for abbr, full_name in state_full_names.items():
+        if selected_state_full_name.endswith(full_name):
+            state = abbr
+            break
+    
+    if state:
+        filtered_df = filter_data(df, state=state)
+    else:
+        st.write(f"No abbreviation found for {selected_state_full_name}.")
 
 # Sort filtered results by dispensary name
 filtered_df = filtered_df.sort_values(by='name')
@@ -80,4 +88,4 @@ else:
     if filter_option == 'City':
         st.write(f"No dispensaries found in {city}.")
     elif filter_option == 'State':
-        st.write(f"No dispensaries found in {state}.")
+        st.write(f"No dispensaries found in {selected_state_full_name}.")
