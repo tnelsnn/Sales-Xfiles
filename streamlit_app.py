@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Load the data
-df = pd.read_csv('data/googlelinks2.csv')
+df = pd.read_csv('data/dutchie_dispensaries.csv')
 
 # Load cities and states data
 cities_states_df = pd.read_csv('data/unique_locations.csv')
