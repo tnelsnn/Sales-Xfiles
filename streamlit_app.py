@@ -7,6 +7,10 @@ df = pd.read_csv('data/googlelinks2.csv')
 # Load cities and states data
 cities_states_df = pd.read_csv('data/unique_locations.csv')
 
+# Sort cities and states in ascending order
+sorted_cities = cities_states_df['city'].sort_values().unique()
+sorted_states = cities_states_df['state'].sort_values().unique()
+
 # Function to filter data by city or state
 def filter_data(df, city=None, state=None):
     if city:
@@ -29,14 +33,15 @@ filter_option = st.sidebar.selectbox('Filter by', ['City', 'State'])
 
 # City selection dropdown
 if filter_option == 'City':
-    cities = cities_states_df['city'].unique()
-    city = st.sidebar.selectbox('Select city', cities)
+    city = st.sidebar.selectbox('Select city', sorted_cities)
     filtered_df = filter_data(df, city=city)
 else:
     # State selection dropdown
-    states = cities_states_df['state'].unique()
-    state = st.sidebar.selectbox('Select state', states)
+    state = st.sidebar.selectbox('Select state', sorted_states)
     filtered_df = filter_data(df, state=state)
+
+# Sort filtered results by dispensary name
+filtered_df = filtered_df.sort_values(by='name')
 
 # Display filtered results
 if not filtered_df.empty:
