@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import csv
 
 # Function to load data for the first page
 def load_first_data():
@@ -10,7 +11,7 @@ def load_second_data():
     return pd.read_csv('data/second_data_set.csv')
 
 # Function to filter data by city or state and company name
-def filter_data(df, city=None, state=None, company_name=None):
+def filter_data(df, city=None, state=None, company_name=None, dispensary_name=None):
     if 'address' in df.columns:
         if city:
             # Filter by exact match of city in address
@@ -19,6 +20,10 @@ def filter_data(df, city=None, state=None, company_name=None):
         if state:
             # Filter by exact match of state abbreviation in address
             df = df[df['address'].str.contains(fr'\b{state}\b', case=False, regex=True)]
+        
+        if dispensary_name:
+            # Filter by dispensary name containing the input string
+            df = df[df['name'].str.contains(dispensary_name, case=False, na=False)]
     elif 'Company Legal Name' in df.columns:
         if company_name:
             # Filter by company name containing the input string
@@ -68,13 +73,13 @@ def main():
 
         # Sidebar for filtering options
         st.sidebar.title('Filter Options')
-        filter_option = st.sidebar.selectbox('Filter by', ['City', 'State'])
+        filter_option = st.sidebar.selectbox('Filter by', ['City', 'State', 'Dispensary Name'])
 
         # City selection dropdown
         if filter_option == 'City':
             city = st.sidebar.selectbox('Select city', sorted_cities)
             filtered_df = filter_data(df, city=city)
-        else:
+        elif filter_option == 'State':
             # State selection dropdown
             selected_state_full_name = st.sidebar.selectbox('Select state', sorted_state_full_names)
             state_abbr = selected_state_full_name.split(' - ')[0].strip()
@@ -83,13 +88,50 @@ def main():
                 filtered_df = filter_data(df, state=state_abbr)
             else:
                 st.warning(f"No data available for {selected_state_full_name}")
+        else:
+            # Dispensary name search input
+            dispensary_name = st.sidebar.text_input('Enter dispensary name to search', '')
+            filtered_df = filter_data(df, dispensary_name=dispensary_name)
 
         # Sort filtered results by dispensary name
         filtered_df = filtered_df.sort_values(by='name')
 
         # Display filtered results
         if not filtered_df.empty:
-            dispensary = st.selectbox('Choose a dispensary', filtered_df['name'].unique())
+            dispensary_names = filtered_df['name'].unique()
+
+            # Display all dispensaries with details
+            if st.checkbox('Show All Dispensaries'):
+                st.write("**All Dispensaries:**")
+                all_dispensaries_df = filtered_df[['name', 'address', 'phone_number']]
+                st.write(all_dispensaries_df)
+
+                # Export all displayed dispensaries to CSV
+                if st.button('Export Displayed Dispensaries to CSV'):
+                    export_filename = st.text_input('Enter export file name', 'dispensaries_export.csv')
+                    csv_string = all_dispensaries_df.to_csv(index=False)
+                    st.download_button(
+                        label="Download CSV",
+                        data=csv_string,
+                        file_name=export_filename,
+                        mime="text/csv"
+                    )
+            else:
+                # Export selected dispensary to CSV
+                if st.button('Export Selected Dispensary to CSV'):
+                    selected_dispensary = st.selectbox('Choose a dispensary', dispensary_names, key='selected_dispensary')
+                    selected_dispensary_details = filtered_df[filtered_df['name'] == selected_dispensary].iloc[0]
+                    export_filename = st.text_input('Enter export file name', 'dispensary_export.csv')
+                    csv_string = selected_dispensary_details.to_frame().T.to_csv(index=False)
+                    st.download_button(
+                        label="Download CSV",
+                        data=csv_string,
+                        file_name=export_filename,
+                        mime="text/csv"
+                    )
+
+            dispensary = st.selectbox('Choose a dispensary', dispensary_names)
+
             dispensary_details = filtered_df[filtered_df['name'] == dispensary].iloc[0]
 
             st.write(f"**Name:** {dispensary_details['name']}")
@@ -106,6 +148,8 @@ def main():
                 st.write(f"No dispensaries found in {city}.")
             elif filter_option == 'State':
                 st.write(f"No dispensaries found in {selected_state_full_name}")
+            elif filter_option == 'Dispensary Name':
+                st.write(f"No dispensaries found matching '{dispensary_name}'.")
 
     elif page == 'Company Information':
         st.header('Company Information')
